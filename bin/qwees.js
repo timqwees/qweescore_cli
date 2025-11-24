@@ -4,73 +4,162 @@ const fs = require('fs-extra');
 const path = require('path');
 const axios = require('axios');
 const decompress = require('decompress');
+const { version } = require('os');
+
+//VERSION ======
+v = 'v1.1.0';
+// ==============
+
+// Minimal color utility
+const COLORS = {
+  reset: '\x1b[0m',
+  green: '\x1b[32m',
+  red: '\x1b[31m',
+  gray: '\x1b[90m',
+  cyan: '\x1b[36m',
+  yellow: '\x1b[33m',
+  magenta: '\x1b[35m',
+  purple: '\x1b[35m',
+  blue: '\x1b[34m',
+  dark: '\x1b[90m',
+  white: '\x1b[37m',
+  bgRed: '\x1b[41m',
+  bgGreen: '\x1b[42m',
+  bgYellow: '\x1b[43m',
+  bgBlue: '\x1b[44m',
+  bgMagenta: '\x1b[45m',
+  bgCyan: '\x1b[46m',
+  bgWhite: '\x1b[47m',
+  bgDark: '\x1b[100m'
+};
+function color(text, color) {
+  return COLORS[color] ? COLORS[color] + text + COLORS.reset : text;
+}
+
+function info(text) {
+  return `${color('[INFO]', 'cyan')} ${text}`;
+}
+function errorMsg(text) {
+  return `${color('[CRASH]', 'red')} ${color(text, 'red')}`;
+}
+function ok(text) {
+  return `${color('[SUCCESS]', 'green')} ${text}`;
+}
+
+// Simple logo (short, less text)
+function showLogo() {
+  console.log(color('\nQweesCore', 'cyan') + color(' PHP ', 'gray') + color('CLI', 'cyan'));
+}
+
+// Progress bar animation
+let barInterval = null;
+function startBar(text) {
+  let width = 54;
+  let pos = 0;
+  process.stdout.write('\n');
+  barInterval = setInterval(() => {
+    let bar = '='.repeat(pos) + '>' + ' '.repeat(width - pos - 1);
+    process.stdout.write(
+      '\r' + color(`[${bar}]`, 'yellow') + ' ' + text
+    );
+    pos = (pos + 1) % width;
+  }, 60);
+}
+function stopBar(finalText, success = true) {
+  clearInterval(barInterval);
+  process.stdout.write(
+    '\r' + (success ? ok(finalText) : errorMsg(finalText)) + '\n'
+  );
+}
 
 async function main() {
   const args = process.argv.slice(2);
-  const cmd = args[0];
-  const projectName = args[1];
+  const cmd = args[0], projectName = args[1];
 
-  // Проверка аргументов
   if (cmd !== 'install' || !projectName) {
-    console.log('✨ [WARNING] Usage: npx qwees install <project-name>');
-    console.log('   Example: qwees install blog');
+    showLogo();
+    console.log(errorMsg('Please, usage command: ') + color(' npx qwees install ' + color(' <project name> ', 'bgMagenta'), 'bgWhite'));
     process.exit(1);
   }
 
   const targetDir = path.resolve(process.cwd(), projectName);
 
-  // Проверка: не существует ли уже папка
   if (fs.existsSync(targetDir)) {
-    console.error(`❌ [Error]: Directory: '${projectName}' already exists.`);
+    console.error(errorMsg(`Folder already exists: `) + color(' test ', 'bgRed'));
     process.exit(1);
   }
 
-  console.log(`🚀 [START] Creating Qwees project: ${projectName}`);
+  showLogo();
+  console.log(info(`Making: ${color(projectName, 'yellow')}`));
 
   try {
-    // 1. Создаём папку проекта
+    // 1. Create folder
+    startBar('Create folder');
     await fs.ensureDir(targetDir);
+    stopBar('Folder ready');
 
-    // 2. Скачиваем ZIP с GitHub (твой репозиторий фреймворка)
-    const zipUrl = 'https://github.com/timqwees/QweesCore/archive/refs/tags/v1.0.0.zip';
+    // 2. Download archive
+    const zipUrl = `https://github.com/timqwees/QweesCore/archive/refs/tags/${v}.zip`;
     const zipPath = path.join(targetDir, 'qwees.zip');
 
-    const response = await axios({
-      url: zipUrl,
-      method: 'GET',
-      responseType: 'arraybuffer'
-    });
-
+    startBar('⌛️ Downloading...');
+    const response = await axios({ url: zipUrl, method: 'GET', responseType: 'arraybuffer' });
     await fs.writeFile(zipPath, response.data);
-    console.log('📦 [==>] Downloaded QweesCore by TimQwees...');
+    stopBar('✅ Downloaded!');
 
-    // 3. Распаковка
+    // 3. Extract
+    startBar('📦 Extracting...');
     await decompress(zipPath, targetDir);
     await fs.remove(zipPath);
-    console.log('🔓 Extracted...');
+    stopBar('✅ Extracted!');
 
-    // 4. Перемещаем содержимое из qwees-main/ в корень проекта
-    const extractedDir = path.join(targetDir, 'qwees-main');
-    if (fs.existsSync(extractedDir)) {
-      const files = await fs.readdir(extractedDir);
-      for (const file of files) {
+    // 4. Move files up if needed
+    const dirs = [path.join(targetDir, 'qwees-main'), path.join(targetDir, `QweesCore-${v} `)];
+    let moveSrc = dirs.find(dir => fs.existsSync(dir));
+    if (moveSrc) {
+      startBar('🔄 Moving files...');
+      for (const file of await fs.readdir(moveSrc)) {
         await fs.move(
-          path.join(extractedDir, file),
+          path.join(moveSrc, file),
           path.join(targetDir, file),
           { overwrite: true }
         );
       }
-      await fs.remove(extractedDir);
+      await fs.remove(moveSrc);
+      stopBar('✅ Ready!');
     }
 
-    console.log(`✅ [SUCCESS]! Project '${projectName}' is ready.`);
-    console.log(`\n👉 Next steps:`);
-    console.log(`   cd ${projectName}`);
-    console.log(`   composer install && composer require vlucas/phpdotenv phpmailer/phpmailer`);
-    console.log(`   cp .env.example .env`);
-    console.log(`   php -S localhost:8000`);
+    // Mini firework lines
+    let art = [
+      "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+      color(`
+
+  ████████ █████ ███ █████  ██████   ██████   █████   ██████   ██████  ████████   ██████
+ ███░░███ ░░███ ░███░░███  ███░░███ ███░░███ ███░░   ███░░███ ███░░███░░███░░███ ███░░███
+░███ ░███  ░███ ░███ ░███ ░███████ ░███████ ░░█████ ░███ ░░░ ░███ ░███ ░███ ░░░ ░███████
+░███ ░███  ░░███████████  ░███░░░  ░███░░░   ░░░░███░███  ███░███ ░███ ░███     ░███░░░
+░░███████   ░░████░████   ░░██████ ░░██████  ██████ ░░██████ ░░██████  █████    ░░██████
+ ░░░░░███    ░░░░ ░░░░     ░░░░░░   ░░░░░░  ░░░░░░   ░░░░░░   ░░░░░░  ░░░░░      ░░░░░░
+     ░███
+     █████
+    ░░░░░
+    `, 'green'),
+      '🎉 ' + color('Project successfully installed!', 'green'),
+      '✨ ' + color('Welcome to QweesCore!', 'white'),
+      "",
+      color('❇️ Your next steps:', 'white'),
+      color('   1.', 'bgDark') + ' ' + color(` cd ${projectName} `, 'bgWhite'),
+      color('   2.', 'bgDark') + ' ' + color(' composer install ', 'bgWhite'),
+      color('   3.', 'bgDark') + ' ' + color(' cp .env.example .env ', 'bgWhite'),
+      color('   4.', 'bgDark') + ' ' + color(' php -S localhost:8000 -t public ', 'bgWhite'),
+      "",
+      color('[INFO] Documentation:', 'gray') + color(' https://github.com/timqwees/qweescore', 'blue') + "\n"]
+
+    for (const line of art) console.log(line);
+
   } catch (err) {
-    console.error(`⛔️ [Failed]: ${err.message}`);
+    if (barInterval) clearInterval(barInterval);
+    console.error(errorMsg('Error: ' + err.message));
     process.exit(1);
   }
 }
