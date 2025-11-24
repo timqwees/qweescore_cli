@@ -32,7 +32,7 @@ async function main() {
     await fs.ensureDir(targetDir);
 
     // 2. Скачиваем ZIP с GitHub (твой репозиторий фреймворка)
-    const zipUrl = 'https://github.com/timqwees/QweesCore/archive/refs/heads/main.zip';
+    const zipUrl = 'https://github.com/timqwees/QweesCore/archive/refs/tags/v1.0.0.zip';
     const zipPath = path.join(targetDir, 'qwees.zip');
 
     const response = await axios({
