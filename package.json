@@ -1,6 +1,6 @@
 {
   "name": "qwees",
-  "version": "1.0.9",
+  "version": "1.1.1",
   "description": "Qwees PHP Framework — simple, fast, zero-config",
   "bin": {
     "qwees": "./bin/qwees.js"

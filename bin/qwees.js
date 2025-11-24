@@ -4,10 +4,10 @@ const fs = require('fs-extra');
 const path = require('path');
 const axios = require('axios');
 const decompress = require('decompress');
-const { version } = require('os');
+const { exec } = require('child_process');
 
 //VERSION ======
-v = 'v1.1.0';
+version = 'v1.1.0';
 // ==============
 
 // Minimal color utility
@@ -99,7 +99,7 @@ async function main() {
     stopBar('Folder ready');
 
     // 2. Download archive
-    const zipUrl = `https://github.com/timqwees/QweesCore/archive/refs/tags/${v}.zip`;
+    const zipUrl = `https://github.com/timqwees/QweesCore/archive/refs/tags/${version}.zip`;
     const zipPath = path.join(targetDir, 'qwees.zip');
 
     startBar('⌛️ Downloading...');
@@ -114,7 +114,7 @@ async function main() {
     stopBar('✅ Extracted!');
 
     // 4. Move files up if needed
-    const dirs = [path.join(targetDir, 'qwees-main'), path.join(targetDir, `QweesCore-${v} `)];
+    const dirs = [path.join(targetDir, 'qwees-main'), path.join(targetDir, `QweesCore-${version} `)];
     let moveSrc = dirs.find(dir => fs.existsSync(dir));
     if (moveSrc) {
       startBar('🔄 Moving files...');
@@ -129,10 +129,24 @@ async function main() {
       stopBar('✅ Ready!');
     }
 
-    // Mini firework lines
-    let art = [
-      "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-      color(`
+    startBar('🚀 Installing Composer dependencies...');
+    exec(
+      `cd "${projectName}" && composer install || composer update && composer require vlucas/phpdotenv phpmailer/phpmailer || true`,
+      (error, stdout, stderr) => {
+        stopBar('✅ Command successed!');
+        if (error) {
+          console.error(errorMsg(`${error.message}`));
+        }
+        if (stdout) {
+          console.log(ok(`${stdout}`));
+        }
+        if (stderr) {
+          console.error(info(`${stderr}`));
+        }
+
+        let art = [
+          "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          color(`
 
   ████████ █████ ███ █████  ██████   ██████   █████   ██████   ██████  ████████   ██████
  ███░░███ ░░███ ░███░░███  ███░░███ ███░░███ ███░░   ███░░███ ███░░███░░███░░███ ███░░███
@@ -143,20 +157,18 @@ async function main() {
      ░███
      █████
     ░░░░░
-    `, 'green'),
-      '🎉 ' + color('Project successfully installed!', 'green'),
-      '✨ ' + color('Welcome to QweesCore!', 'white'),
-      "",
-      color('❇️ Your next steps:', 'white'),
-      color('   1.', 'bgDark') + ' ' + color(` cd ${projectName} `, 'bgWhite'),
-      color('   2.', 'bgDark') + ' ' + color(' composer install ', 'bgWhite'),
-      color('   3.', 'bgDark') + ' ' + color(' cp .env.example .env ', 'bgWhite'),
-      color('   4.', 'bgDark') + ' ' + color(' php -S localhost:8000 -t public ', 'bgWhite'),
-      "",
-      color('[INFO] Documentation:', 'gray') + color(' https://github.com/timqwees/qweescore', 'blue') + "\n"]
-
-    for (const line of art) console.log(line);
-
+      `, 'green'),
+          '🎉 ' + color('Project successfully installed!', 'green'),
+          '✨ ' + color('Welcome to QweesCore!', 'white'),
+          "",
+          color('❇️ Your next steps:', 'white'),
+          color('   [START COMMAND]', 'bgDark') + ' ' + color(' php -S localhost:8000 -t public ', 'bgWhite'),
+          "",
+          color('[INFO] Documentation:', 'gray') + color(' https://github.com/timqwees/qweescore', 'blue') + "\n"
+        ];
+        for (const line of art) console.log(line);
+      }
+    );
   } catch (err) {
     if (barInterval) clearInterval(barInterval);
     console.error(errorMsg('Error: ' + err.message));
