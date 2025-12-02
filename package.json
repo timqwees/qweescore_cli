@@ -1,6 +1,6 @@
 {
   "name": "qwees",
-  "version": "1.0.0",
+  "version": "2.0.2",
   "description": "Qwees PHP Framework — simple, fast, zero-config",
   "bin": {
     "qwees": "./bin/qwees.js"
@@ -15,7 +15,20 @@
     "framework",
     "qwees",
     "qweescore",
-    "installer"
+    "installer",
+    "cli",
+    "bootstrap",
+    "creator",
+    "project-generator",
+    "init",
+    "scaffolding",
+    "setup",
+    "composer",
+    "webroot-independent",
+    "modern",
+    "simple",
+    "fast",
+    "gpl"
   ],
   "author": "timqwees technology",
   "license": "GPL-3.0",
