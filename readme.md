@@ -28,8 +28,6 @@ QweesCore CLI — установщик и генератор проектов д
 
 ```sh
 npx qwees install <project-name>
-# or, if installed globally:       # или если установлен глобально:
-qwees install <project-name>
 ```
 
 Replace `<project-name>` with your desired directory/project name.
@@ -42,7 +40,7 @@ Replace `<project-name>` with your desired directory/project name.
 ```sh
 npx qwees install my-app
 cd my-app
-qwees start
+qwees start или run serve
 ```
 
 The last command will start the PHP built-in development server.

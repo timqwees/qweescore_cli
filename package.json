@@ -1,14 +1,14 @@
 {
   "name": "qwees",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "description": "Qwees PHP Framework — simple, fast, zero-config",
   "bin": {
-    "qwees": "./bin/qwees.js"
+    "qwees": "bin/qwees.js"
   },
   "preferGlobal": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/timqwees/qweescore_cli.git"
+    "url": "git+https://github.com/timqwees/qweescore.git"
   },
   "keywords": [
     "php",
@@ -31,7 +31,7 @@
     "gpl"
   ],
   "author": "timqwees technology",
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "axios": "^1.6.0",
     "decompress": "^4.2.1",

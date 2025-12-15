@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 // Проверь — базовая логика CLI инсталлятора QweesCore
 
 const fs = require('fs-extra');
@@ -10,7 +9,7 @@ const { exec } = require('child_process');
 
 // VERSION — определяет QweesCore версию
 // https://github.com/timqwees/QweesCore/releases/
-const version = '2.0.0';
+const version = '2.1.0';
 
 // Минимальная цветовая утилита ANSI для форматирования вывода
 const COLORS = {
@@ -271,7 +270,7 @@ async function main() {
           '✨ ' + color('Welcome to QweesCore!', 'white'),
           "",
           color('❇️ Your next steps:', 'white'),
-          color('   [START COMMAND]', 'bgDark') + ' ' + color(' qwees start|run ', 'bgWhite'),
+          color('   [START COMMAND]', 'bgDark') + ' ' + color(' qwees start ', 'bgWhite') + color(' or ', 'gray') + color(' qwees run ', 'bgWhite') + color(' or ', 'gray') + color(' run serve ', 'bgWhite'),
           "",
           color('[INFO] Documentation:', 'gray') + color(' https://github.com/timqwees/qweescore', 'blue') + "\n"
         ];
